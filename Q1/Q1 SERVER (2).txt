@@ -1,0 +1,39 @@
+import java.rmi.*;
+import java.rmi.server.*;
+import java.rmi.registry.*;
+
+public class MultiplesOfTwoServer extends UnicastRemoteObject implements MultiplesOfTwo {
+    
+    // Constructor
+    public MultiplesOfTwoServer() throws RemoteException {
+        super();
+    }
+
+    // Method to generate multiples of 2 up to the given limit
+    @Override
+    public int[] generateMultiples(int limit) throws RemoteException {
+        int[] multiples = new int[limit / 2]; // Array to hold multiples of 2
+        for (int i = 1; i <= limit / 2; i++) {
+            multiples[i - 1] = i * 2;  // Generating multiples of 2
+        }
+        return multiples;
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Create the server object
+            MultiplesOfTwoServer server = new MultiplesOfTwoServer();
+            
+            // Create and export the registry
+            Registry registry = LocateRegistry.createRegistry(1099);
+            
+            // Bind the service to the registry
+            registry.rebind("MultiplesOfTwoService", server);
+            
+            System.out.println("MultiplesOfTwo Server is ready...");
+        } catch (Exception e) {
+            System.err.println("Server exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+}
