@@ -1,0 +1,75 @@
+import java.rmi.*;
+import java.rmi.registry.*;
+import java.util.*;
+
+public class MatrixMultiplicationClient {
+    
+    public static void main(String[] args) {
+        try {
+            // Connect to the RMI registry
+            Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+            MatrixMultiplication stub = (MatrixMultiplication) registry.lookup("MatrixMultiplicationService");
+
+            // Example matrices A and B (for simplicity, they are small)
+            int[][] matrixA = {
+                {1, 2, 3},
+                {4, 5, 6}
+            };
+
+            int[][] matrixB = {
+                {7, 8},
+                {9, 10},
+                {11, 12}
+            };
+
+            // Split the matrices into submatrices for parallel processing
+            List<int[][]> submatricesA = splitMatrix(matrixA, 1, 2);
+            List<int[][]> submatricesB = splitMatrix(matrixB, 2, 1);
+
+            List<int[][]> results = new ArrayList<>();
+
+            // Parallel multiplication of submatrices
+            for (int i = 0; i < submatricesA.size(); i++) {
+                int[][] subA = submatricesA.get(i);
+                int[][] subB = submatricesB.get(i);
+                int[][] result = stub.multiplySubmatrix(subA, subB);
+                results.add(result);
+            }
+
+            // Combine the results into a final matrix
+            int[][] finalResult = stub.combineResults(results, matrixA.length, matrixB[0].length);
+
+            // Print the final result
+            System.out.println("Final result matrix:");
+            for (int i = 0; i < finalResult.length; i++) {
+                for (int j = 0; j < finalResult[0].length; j++) {
+                    System.out.print(finalResult[i][j] + " ");
+                }
+                System.out.println();
+            }
+        } catch (Exception e) {
+            System.err.println("Client exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    // Helper method to split a matrix into submatrices
+    private static List<int[][]> splitMatrix(int[][] matrix, int rows, int cols) {
+        List<int[][]> submatrices = new ArrayList<>();
+        int subMatrixRows = matrix.length / rows;
+        int subMatrixCols = matrix[0].length / cols;
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                int[][] submatrix = new int[subMatrixRows][subMatrixCols];
+                for (int r = 0; r < subMatrixRows; r++) {
+                    for (int c = 0; c < subMatrixCols; c++) {
+                        submatrix[r][c] = matrix[i * subMatrixRows + r][j * subMatrixCols + c];
+                    }
+                }
+                submatrices.add(submatrix);
+            }
+        }
+        return submatrices;
+    }
+}
