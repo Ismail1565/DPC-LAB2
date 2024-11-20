@@ -1,0 +1,27 @@
+import java.rmi.*;
+
+public class Client {
+
+    public static void main(String[] args) {
+        try {
+            // Connect to the RMI registry on localhost
+            MultiplesOfTwo stub = (MultiplesOfTwo) Naming.lookup("rmi://localhost/MultiplesOfTwo");
+
+            // Set the limit for multiples of 2
+            int limit = 20;
+
+            // Call the remote method to generate multiples of 2 up to the limit
+            int[] multiples = stub.generateMultiples(limit);
+
+            // Print the result
+            System.out.println("Multiples of 2 up to " + limit + ":");
+            for (int multiple : multiples) {
+                System.out.print(multiple + " ");
+            }
+            System.out.println();
+        } catch (Exception e) {
+            System.err.println("Client exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+}
