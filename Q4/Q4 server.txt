@@ -1,0 +1,71 @@
+import java.rmi.*;
+import java.rmi.server.*;
+
+public class MatrixMultiplicationImpl extends UnicastRemoteObject implements MatrixMultiplication {
+
+    // Constructor
+    public MatrixMultiplicationImpl() throws RemoteException {
+        super();
+    }
+
+    // Multiply two submatrices
+    @Override
+    public int[][] multiplySubmatrix(int[][] submatrixA, int[][] submatrixB) throws RemoteException {
+        int rowsA = submatrixA.length;
+        int colsA = submatrixA[0].length;
+        int colsB = submatrixB[0].length;
+
+        int[][] result = new int[rowsA][colsB];
+
+        // Matrix multiplication
+        for (int i = 0; i < rowsA; i++) {
+            for (int j = 0; j < colsB; j++) {
+                for (int k = 0; k < colsA; k++) {
+                    result[i][j] += submatrixA[i][k] * submatrixB[k][j];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // Combine results from submatrices
+    @Override
+    public int[][] combineResults(int[][][] submatrixResults, int resultRows, int resultCols) throws RemoteException {
+        int[][] resultMatrix = new int[resultRows][resultCols];
+        int submatrixRows = submatrixResults[0].length;
+        int submatrixCols = submatrixResults[0][0].length;
+
+        int index = 0;
+        for (int i = 0; i < resultRows; i += submatrixRows) {
+            for (int j = 0; j < resultCols; j += submatrixCols) {
+                int[][] submatrix = submatrixResults[index++];
+                for (int m = 0; m < submatrixRows; m++) {
+                    for (int n = 0; n < submatrixCols; n++) {
+                        resultMatrix[i + m][j + n] = submatrix[m][n];
+                    }
+                }
+            }
+        }
+
+        return resultMatrix;
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Create an instance of the server
+            MatrixMultiplicationImpl server = new MatrixMultiplicationImpl();
+
+            // Create the RMI registry
+            java.rmi.registry.LocateRegistry.createRegistry(1099);
+
+            // Bind the server object to the RMI registry
+            Naming.rebind("MatrixMultiplicationService", server);
+
+            System.out.println("Matrix Multiplication Server is ready...");
+        } catch (Exception e) {
+            System.err.println("Server exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+}
